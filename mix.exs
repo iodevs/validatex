@@ -44,11 +44,12 @@ defmodule Validatex.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:result, "~> 1.5"},
+      {:ex_maybe, "~> 1.1"},
       # {:ex_doc, "~> 0.21", only: :dev},
       {:credo, "~> 1.1", only: [:dev, :test]},
       {:excoveralls, "~> 0.11", only: :test},
       {:dialyxir, "~> 0.5", only: [:dev, :test], runtime: false}
     ]
   end
-
 end
