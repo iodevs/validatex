@@ -3,11 +3,14 @@ defmodule Validatex.Validation do
   This module helps with validation of input forms.
   """
 
-  @type validator(a, b) :: (a -> Result.t(String.t(), b))
+  @type error() :: String.t()
+  @type errors() :: [error()]
+  @type error_or_errors :: error() | errors()
+  @type validator(a, b) :: (a -> Result.t(error_or_errors(), b))
 
   @type not_validated() :: :not_validated
   @type valid(a) :: {:valid, a}
-  @type invalid() :: {:invalid, String.t()}
+  @type invalid() :: {:invalid, error_or_errors()}
 
   @type validity(a) :: not_validated() | valid(a) | invalid()
   @type field(raw, a) :: {:field, raw, validity(a)}
@@ -41,10 +44,10 @@ defmodule Validatex.Validation do
     {:field, f.(val), {:valid, val}}
   end
 
-  @spec invalidate(field(raw, any()), String.t()) :: {:field, raw, {:invalid, String.t()}}
+  @spec invalidate(field(raw, any()), String.t()) :: {:field, raw, {:invalid, error_or_errors()}}
         when raw: var
-  def invalidate({:field, raw, _}, str) when is_binary(str) do
-    {:field, raw, {:invalid, str}}
+  def invalidate({:field, raw, _}, err) when is_binary(err) or is_list(err) do
+    {:field, raw, {:invalid, err}}
   end
 
   @spec validate(field(raw, a), validator(raw, a), event(raw)) :: field(raw, a)
@@ -67,7 +70,7 @@ defmodule Validatex.Validation do
     validate_if_validated({:field, val, validity}, validator)
   end
 
-  @spec extract_error(field(any(), any())) :: ExMaybe.t(String.t())
+  @spec extract_error(field(any(), any())) :: ExMaybe.t(error_or_errors())
   def extract_error({:field, _, {:invalid, error}}) do
     error
   end
@@ -93,12 +96,12 @@ defmodule Validatex.Validation do
     {:field, raw, raw |> validator.() |> to_validity()}
   end
 
-  @spec to_validity(Result.t(String.t(), val)) :: validity(val) when val: var
+  @spec to_validity(Result.t(error_or_errors(), val)) :: validity(val) when val: var
   defp to_validity({:ok, val}) do
     {:valid, val}
   end
 
-  defp to_validity({:error, msg}) do
-    {:invalid, msg}
+  defp to_validity({:error, err}) do
+    {:invalid, err}
   end
 end
