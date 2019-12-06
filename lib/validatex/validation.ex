@@ -3,6 +3,8 @@ defmodule Validatex.Validation do
   This module helps with validation of input forms.
   """
 
+  @type key() :: String.t() | atom()
+
   @type error() :: String.t()
   @type errors() :: [error()]
   @type error_or_errors :: error() | errors()
@@ -14,6 +16,7 @@ defmodule Validatex.Validation do
 
   @type validity(a) :: not_validated() | valid(a) | invalid()
   @type field(raw, a) :: {:field, raw, validity(a)}
+  @type optional_field(raw, a) :: field(raw, ExMaybe.t(a))
 
   @type on_submit() :: :on_submit
   @type on_blur() :: :on_blur
@@ -36,6 +39,11 @@ defmodule Validatex.Validation do
   @spec field(raw) :: {:field, raw, :not_validated} when raw: var
   def field(raw) do
     {:field, raw, :not_validated}
+  end
+
+  @spec optional_field(raw) :: {:field, raw, :not_validated} when raw: var
+  def optional_field(raw) do
+    field(raw)
   end
 
   @spec pre_validated_field(val, (val -> String.t())) :: {:field, String.t(), valid(val)}
@@ -70,6 +78,15 @@ defmodule Validatex.Validation do
     validate_if_validated({:field, val, validity}, validator)
   end
 
+  @spec apply(%{required(key()) => field(any(), a)}, [key()], (%{required(key()) => a} -> b)) ::
+          validity(b)
+        when a: var, b: var
+  def apply(data, fields, f) when is_map(data) and is_list(fields) and is_function(f, 1) do
+    data
+    |> take(fields)
+    |> map(f)
+  end
+
   @spec extract_error(field(any(), any())) :: ExMaybe.t(error_or_errors())
   def extract_error({:field, _, {:invalid, error}}) do
     error
@@ -77,6 +94,36 @@ defmodule Validatex.Validation do
 
   def extract_error({:field, _, _}) do
     nil
+  end
+
+  @spec optional(validator(String.t(), a)) :: validator(String.t(), ExMaybe.t(a)) when a: var
+  def optional(validator) when validator?(validator) do
+    fn
+      "" ->
+        {:ok, nil}
+
+      raw when is_binary(raw) ->
+        validator.(raw)
+    end
+  end
+
+  @spec valid?(field(any(), any())) :: boolean()
+  def valid?({:field, _, {:valid, _}}), do: true
+  def valid?(_), do: false
+
+  @spec submit_if_valid(
+          %{required(key()) => field(any(), a)},
+          [key()],
+          (%{required(key()) => a} -> b)
+        ) ::
+          b
+        when a: var, b: Result.t(any(), any())
+  def submit_if_valid(data, fields, f)
+      when is_map(data) and is_list(fields) and is_function(f, 1) do
+    data
+    |> take(fields)
+    |> to_result()
+    |> Result.and_then(f)
   end
 
   # Private
@@ -104,4 +151,36 @@ defmodule Validatex.Validation do
   defp to_validity({:error, err}) do
     {:invalid, err}
   end
+
+  @spec take(%{required(key()) => field(any(), a)}, [key()]) :: validity(%{required(key()) => a})
+        when a: var
+  defp take(data, fields) when is_map(data) and is_list(fields) do
+    Enum.reduce_while(
+      fields,
+      {:valid, %{}},
+      fn field, {:valid, acc} ->
+        case data |> Map.get(field) |> validity() do
+          {:valid, value} ->
+            {:cont, {:valid, Map.put(acc, field, value)}}
+
+          _ ->
+            {:halt, {:invalid, "'#{field}' field isn't valid.'"}}
+        end
+      end
+    )
+  end
+
+  @spec map(validity(a), (a -> b)) :: validity(b) when a: var, b: var
+  defp map({:valid, data}, f) when is_function(f, 1) do
+    {:valid, f.(data)}
+  end
+
+  defp map(validity, _f) do
+    validity
+  end
+
+  @spec to_result(validity(a)) :: Result.t(error_or_errors(), a) when a: var
+  defp to_result({:valid, data}), do: {:ok, data}
+  defp to_result({:invalid, err}), do: {:error, err}
+  defp to_result(:not_validated), do: {:error, "Not validated"}
 end
