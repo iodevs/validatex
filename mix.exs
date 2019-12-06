@@ -20,13 +20,15 @@ defmodule Validatex.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
+      package: package(),
       test_coverage: [tool: ExCoveralls],
       preferred_cli_env: [
         coveralls: :test,
         "coveralls.detail": :test,
         "coveralls.post": :test,
         "coveralls.html": :test
-      ]
+      ],
+      source_url: "https://github.com/iodevs/validatex"
     ]
   end
 
@@ -46,10 +48,23 @@ defmodule Validatex.MixProject do
     [
       {:result, "~> 1.5"},
       {:ex_maybe, "~> 1.1"},
-      # {:ex_doc, "~> 0.21", only: :dev},
+      {:ex_doc, "~> 0.21", only: :dev},
       {:credo, "~> 1.1", only: [:dev, :test]},
       {:excoveralls, "~> 0.11", only: :test},
       {:dialyxir, "~> 0.5", only: [:dev, :test], runtime: false}
+    ]
+  end
+
+  defp package do
+    [
+      maintainers: [
+        "Jindrich K. Smitka <smitka.j@gmail.com>",
+        "Ondrej Tucek <ondrej.tucek@gmail.com>"
+      ],
+      licenses: ["BSD-4-Clause"],
+      links: %{
+        "GitHub" => "https://github.com/iodevs/validatex"
+      }
     ]
   end
 end
