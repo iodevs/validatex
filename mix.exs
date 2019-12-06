@@ -19,6 +19,7 @@ defmodule Validatex.MixProject do
       elixir: "~> 1.9",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
+      description: "An Elixir validation library for live view forms.",
       deps: deps(),
       package: package(),
       test_coverage: [tool: ExCoveralls],
