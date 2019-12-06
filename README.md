@@ -8,7 +8,7 @@
 ```elixir
 def deps do
   [
-    {:validatex, "~> 0.1.0"}
+    {:validatex, "~> 0.2.0"}
   ]
 end
 ```
