@@ -62,4 +62,13 @@ defmodule Validatex.Validators do
       {:error, msg}
     end
   end
+
+  @spec format(raw(), Regex.t(), error_msg()) :: Result.t(error_msg(), raw())
+  def format(value, %Regex{} = regex, msg) when raw?(value) and error_msg?(msg) do
+    if value =~ regex do
+      {:ok, value}
+    else
+      {:error, msg}
+    end
+  end
 end
