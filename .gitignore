@@ -27,3 +27,5 @@ validatex-*.tar
 
 tags
 .projections.json
+
+.elixir_ls/
