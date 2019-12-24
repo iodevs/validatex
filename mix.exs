@@ -1,21 +1,13 @@
 defmodule Validatex.MixProject do
   use Mix.Project
 
+  @version "0.3.0"
+
   def project do
     [
       app: :validatex,
-      dialyzer: [
-        plt_add_apps: [:mix],
-        plt_add_deps: :transitive,
-        ignore_warnings: "dialyzer.ignore-warnings",
-        flags: [
-          :unmatched_returns,
-          :error_handling,
-          :race_conditions,
-          :no_opaque
-        ]
-      ],
-      version: "0.3.0",
+      dialyzer: dialyzer_base() |> dialyzer_ptl(System.get_env("SEMAPHORE_CACHE_DIR")),
+      version: @version,
       elixir: "~> 1.9",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -29,7 +21,10 @@ defmodule Validatex.MixProject do
         "coveralls.post": :test,
         "coveralls.html": :test
       ],
-      source_url: "https://github.com/iodevs/validatex"
+      source_url: "https://github.com/iodevs/validatex",
+      name: "Validatex",
+      docs: docs(),
+      aliases: aliases()
     ]
   end
 
@@ -67,5 +62,77 @@ defmodule Validatex.MixProject do
         "GitHub" => "https://github.com/iodevs/validatex"
       }
     ]
+  end
+
+  defp aliases() do
+    [
+      docs: ["docs", &copy_assets/1]
+    ]
+  end
+
+  defp dialyzer_base() do
+    [
+      plt_add_apps: [:mix],
+      plt_add_deps: :transitive,
+      ignore_warnings: "dialyzer.ignore-warnings",
+      flags: [
+        :unmatched_returns,
+        :error_handling,
+        :race_conditions,
+        :no_opaque
+      ]
+    ]
+  end
+
+  defp dialyzer_ptl(base, nil) do
+    base
+  end
+
+  defp dialyzer_ptl(base, path) do
+    base ++
+      [
+        plt_core_path: path,
+        plt_file:
+          Path.join(
+            path,
+            "dialyxir_erlang-#{otp_vsn()}_elixir-#{System.version()}_deps-dev.plt"
+          )
+      ]
+  end
+
+  defp otp_vsn() do
+    major = :erlang.system_info(:otp_release) |> List.to_string()
+    vsn_file = Path.join([:code.root_dir(), "releases", major, "OTP_VERSION"])
+
+    try do
+      {:ok, contents} = File.read(vsn_file)
+      String.split(contents, "\n", trim: true)
+    else
+      [full] ->
+        full
+
+      _ ->
+        major
+    catch
+      :error, _ ->
+        major
+    end
+  end
+
+  defp docs() do
+    [
+      source_ref: "v#{@version}",
+      canonical: "https://hexdocs.pm/validatex",
+      main: "readme",
+      extras: ["README.md"],
+      groups_for_extras: [
+        Introduction: ~r/README.md/
+      ]
+    ]
+  end
+
+  defp copy_assets(_) do
+    File.mkdir_p!("doc/docs")
+    # File.cp_r!("docs", "doc/docs")
   end
 end
