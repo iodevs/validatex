@@ -224,8 +224,8 @@ defmodule Validatex.Validators do
       def date(value) do
         Validators.format(
         value,
-        ~r/^\d{1,2}\.\d{1,2}\.(\d{4})?$/,
-        "Correct date is, for example in format 11.12.1918 or 03.08.2008."
+        ~r/^\\d{1,2}\\.\\d{1,2}\\.(\\d{4})?$/,
+        "Correct date is e.g. in format 11.12.1918 or 03.08.2008."
       )
       end
 
@@ -233,7 +233,7 @@ defmodule Validatex.Validators do
       def email(value) do
         Validators.format(
           value,
-          ~r/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/,
+          ~r/^[a-zA-Z0-9.!#$%&'*+\\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/,
           "It's required valid email!"
         )
       end
