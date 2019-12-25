@@ -63,10 +63,13 @@ defmodule Validatex.Validators do
         Validators.is_integer?(value, "The score has to be integer!")
       end
   """
-  @spec is_integer?(raw(), 2..36, error_msg()) :: Result.t(error_msg(), integer())
-  def is_integer?(value, base \\ 10, msg \\ "The value has to be an integer!")
-      when raw?(value) and is_integer(base) and error_msg?(msg) do
-    value |> Integer.parse() |> case_do(msg)
+  @spec is_integer?(raw(), error_msg()) :: Result.t(error_msg(), integer())
+  def is_integer?(value, msg \\ "The value has to be an integer!")
+      when raw?(value) and error_msg?(msg) do
+    value
+    |> is_not_empty?
+    |> Result.map(&Integer.parse/1)
+    |> case_do(msg)
   end
 
   @doc """
@@ -81,7 +84,7 @@ defmodule Validatex.Validators do
   @spec is_float?(raw(), error_msg()) :: Result.t(error_msg(), float())
   def is_float?(value, msg \\ "The value has to be a float!")
       when raw?(value) and error_msg?(msg) do
-    value |> Float.parse() |> case_do(msg)
+    value |> is_not_empty? |> Result.map(&Float.parse/1) |> case_do(msg)
   end
 
   @doc """
@@ -204,7 +207,8 @@ defmodule Validatex.Validators do
   Validates if the input value is inside required list.
   """
   @spec is_in_list?(a, [a], error_msg()) :: Result.t(error_msg(), a) when a: var
-  def is_in_list?(value, list, msg) when is_list(list) and error_msg?(msg) do
+  def is_in_list?(value, list, msg \\ "The value has to be in list!")
+      when is_list(list) and error_msg?(msg) do
     if value in list do
       Result.ok(value)
     else
@@ -256,7 +260,7 @@ defmodule Validatex.Validators do
 
   defp case_do(tpl, msg) do
     case tpl do
-      {val, ""} ->
+      {:ok, {val, ""}} ->
         Result.ok(val)
 
       _ ->
