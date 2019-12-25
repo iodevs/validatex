@@ -15,7 +15,7 @@ defmodule Validatex.Validators do
 
   Note:
 
-  Each function has a default error message. This message can be rewritten
+  Almost each function has a default error message. This message can be rewritten
   according to your needs.
   """
 
