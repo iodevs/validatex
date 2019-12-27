@@ -40,17 +40,17 @@ defmodule Validatex.Validators do
 
       @spec name(String.t()) :: Result.t(String.t(), String.t())
       def name(value) do
-        Validators.not_empty?(value, "Name is required!")
+        Validators.not_empty(value, "Name is required!")
       end
   """
-  @spec is_not_empty?(raw(), error_msg()) :: Result.t(error_msg(), raw())
-  def is_not_empty?(value, msg \\ "The value must not be an empty!")
+  @spec not_empty(raw(), error_msg()) :: Result.t(error_msg(), raw())
+  def not_empty(value, msg \\ "The value must not be an empty!")
 
-  def is_not_empty?("", msg) when is_binary(msg) do
+  def not_empty("", msg) when is_binary(msg) do
     Result.error(msg)
   end
 
-  def is_not_empty?(value, _) when is_binary(value) do
+  def not_empty(value, _) when is_binary(value) do
     Result.ok(value)
   end
 
@@ -60,16 +60,13 @@ defmodule Validatex.Validators do
   ## Example:
       @spec score(String.t()) :: Result.t(String.t(), integer())
       def score(value) do
-        Validators.is_integer?(value, "The score has to be integer!")
+        Validators.integer(value, "The score has to be integer!")
       end
   """
-  @spec is_integer?(raw(), error_msg()) :: Result.t(error_msg(), integer())
-  def is_integer?(value, msg \\ "The value has to be an integer!")
+  @spec integer(raw(), error_msg()) :: Result.t(error_msg(), integer())
+  def integer(value, msg \\ "The value has to be an integer!")
       when raw?(value) and error_msg?(msg) do
-    value
-    |> is_not_empty?
-    |> Result.map(&Integer.parse/1)
-    |> case_do(msg)
+    value |> not_empty() |> Result.map(&Integer.parse/1) |> case_do(msg)
   end
 
   @doc """
@@ -78,13 +75,13 @@ defmodule Validatex.Validators do
   ## Example:
       @spec temperature(String.t()) :: Result.t(String.t(), float())
       def temperature(value) do
-        Validators.is_float?(value, "The temperature has to be float!")
+        Validators.float(value, "The temperature has to be float!")
       end
   """
-  @spec is_float?(raw(), error_msg()) :: Result.t(error_msg(), float())
-  def is_float?(value, msg \\ "The value has to be a float!")
+  @spec float(raw(), error_msg()) :: Result.t(error_msg(), float())
+  def float(value, msg \\ "The value has to be a float!")
       when raw?(value) and error_msg?(msg) do
-    value |> is_not_empty? |> Result.map(&Float.parse/1) |> case_do(msg)
+    value |> not_empty() |> Result.map(&Float.parse/1) |> case_do(msg)
   end
 
   @doc """
@@ -93,13 +90,13 @@ defmodule Validatex.Validators do
   ## Example:
       @spec count(String.t()) :: Result.t(String.t(), number())
       def count(value) do
-        Validators.is_less_than?(value, 10, "The value has to be less than 10!")
+        Validators.less_than(value, 10, "The value has to be less than 10!")
       end
   """
-  @spec is_less_than?(raw(), number(), error_msg()) :: Result.t(error_msg(), number())
-  def is_less_than?(value, req_val, msg \\ "The value has to be less than required value!")
+  @spec less_than(raw(), number(), error_msg()) :: Result.t(error_msg(), number())
+  def less_than(value, req_val, msg \\ "The value has to be less than required value!")
       when raw?(value) and is_number(req_val) and error_msg?(msg) do
-    validate(value, req_val, msg, &less_than/3)
+    validate(value, req_val, msg, &is_less_than/3)
   end
 
   @doc """
@@ -108,35 +105,35 @@ defmodule Validatex.Validators do
   ## Example:
       @spec total_count(String.t()) :: Result.t(String.t(), number())
       def total_count(value) do
-        Validators.is_at_most?(value, 10, "The value has to be less or equal to 10!")
+        Validators.at_most(value, 10, "The value has to be less or equal to 10!")
       end
   """
-  @spec is_at_most?(raw(), number(), error_msg()) :: Result.t(error_msg(), number())
-  def is_at_most?(value, req_val, msg \\ "The value has to be less or equal to required value!")
+  @spec at_most(raw(), number(), error_msg()) :: Result.t(error_msg(), number())
+  def at_most(value, req_val, msg \\ "The value has to be less or equal to required value!")
       when raw?(value) and is_number(req_val) and error_msg?(msg) do
-    validate(value, req_val, msg, &at_most/3)
+    validate(value, req_val, msg, &is_at_most/3)
   end
 
   @doc """
   Validates if the input value is greater than required value.
   """
-  @spec is_greater_than?(raw(), number(), error_msg()) :: Result.t(error_msg(), number())
-  def is_greater_than?(value, req_val, msg \\ "The value has to be greater than required value!")
+  @spec greater_than(raw(), number(), error_msg()) :: Result.t(error_msg(), number())
+  def greater_than(value, req_val, msg \\ "The value has to be greater than required value!")
       when raw?(value) and is_number(req_val) and error_msg?(msg) do
-    validate(value, req_val, msg, &greater_than/3)
+    validate(value, req_val, msg, &is_greater_than/3)
   end
 
   @doc """
   Validates if the input value is greater or equal to required value.
   """
-  @spec is_at_least?(raw(), number(), error_msg()) :: Result.t(error_msg(), number())
-  def is_at_least?(
+  @spec at_least(raw(), number(), error_msg()) :: Result.t(error_msg(), number())
+  def at_least(
         value,
         req_val,
         msg \\ "The value has to be greater or equal to required value!"
       )
       when raw?(value) and is_number(req_val) and error_msg?(msg) do
-    validate(value, req_val, msg, &at_least/3)
+    validate(value, req_val, msg, &is_at_least/3)
   end
 
   @doc """
@@ -150,11 +147,11 @@ defmodule Validatex.Validators do
         max = 12
 
         [
-          Validators.not_empty?(value, "Passsword is required!"),
+          Validators.not_empty(value, "Passsword is required!"),
           pass
           |> String.length()
           |> Kernel.to_string()
-          |> Validators.is_in_range?(min, max,
+          |> Validators.in_range(min, max,
             "Password has to be at most #\{min\} and at least #\{max\} lenght!"
             )
         ]
@@ -162,11 +159,11 @@ defmodule Validatex.Validators do
         |> Result.map(&hd/1)
       end
   """
-  @spec is_in_range?(raw(), number(), number(), error_msg()) ::
+  @spec in_range(raw(), number(), number(), error_msg()) ::
           Result.t(error_msg(), number())
-  def is_in_range?(value, min, max, msg)
+  def in_range(value, min, max, msg)
       when raw?(value) and is_number(min) and is_number(max) and is_binary(msg) do
-    validate(value, [min, max], msg, &in_range/3)
+    validate(value, [min, max], msg, &is_in_range/3)
   end
 
   @doc """
@@ -175,19 +172,19 @@ defmodule Validatex.Validators do
   ## Example:
       @spec captcha(String.t()) :: Result.t(String.t(), number())
       def captcha(value) do
-        Validators.is_equal_to?(value, 10, "The summation has to be equal to 10!")
+        Validators.equal_to(value, 10, "The summation has to be equal to 10!")
       end
   """
-  @spec is_equal_to?(raw(), number() | String.t(), error_msg()) ::
+  @spec equal_to(raw(), number() | String.t(), error_msg()) ::
           Result.t(error_msg(), number() | String.t())
-  def is_equal_to?(value, req_val, msg \\ "The value has to be equal to required value!")
+  def equal_to(value, req_val, msg \\ "The value has to be equal to required value!")
 
-  def is_equal_to?(value, req_val, msg)
+  def equal_to(value, req_val, msg)
       when raw?(value) and is_number(req_val) and error_msg?(msg) do
-    validate(value, req_val, msg, &equal_to/3)
+    validate(value, req_val, msg, &is_equal_to/3)
   end
 
-  def is_equal_to?(value, req_val, msg)
+  def equal_to(value, req_val, msg)
       when raw?(value) and is_binary(req_val) and error_msg?(msg) do
     if value == req_val do
       Result.ok(value)
@@ -199,15 +196,15 @@ defmodule Validatex.Validators do
   @doc """
   Validates if the input value is true or false.
   """
-  @spec is_true?(boolean(), error_msg()) :: Result.t(error_msg(), true)
-  def is_true?(true, _msg), do: {:ok, true}
-  def is_true?(false, msg), do: {:error, msg}
+  @spec true?(boolean(), error_msg()) :: Result.t(error_msg(), true)
+  def true?(true, _msg), do: {:ok, true}
+  def true?(false, msg), do: {:error, msg}
 
   @doc """
   Validates if the input value is inside required list.
   """
-  @spec is_in_list?(a, [a], error_msg()) :: Result.t(error_msg(), a) when a: var
-  def is_in_list?(value, list, msg \\ "The value has to be in list!")
+  @spec in_list(a, [a], error_msg()) :: Result.t(error_msg(), a) when a: var
+  def in_list(value, list, msg \\ "The value has to be in list!")
       when is_list(list) and error_msg?(msg) do
     if value in list do
       Result.ok(value)
@@ -251,8 +248,8 @@ defmodule Validatex.Validators do
 
   defp validate(value, req_val, msg, fun) when is_function(fun, 3) do
     value
-    |> is_integer?()
-    |> Result.r_or(is_float?(value))
+    |> integer()
+    |> Result.r_or(float(value))
     |> not_integer_either_float()
     |> Result.map(&fun.(&1, req_val, msg))
     |> Result.resolve()
@@ -274,51 +271,51 @@ defmodule Validatex.Validators do
 
   defp not_integer_either_float(is_ok), do: is_ok
 
-  defp less_than([num | _tl], limit, _msg) when num < limit do
+  defp is_less_than([num | _tl], limit, _msg) when num < limit do
     Result.ok(num)
   end
 
-  defp less_than(_num, _limit, msg) do
+  defp is_less_than(_num, _limit, msg) do
     Result.error(msg)
   end
 
-  defp at_most([num | _tl], limit, _msg) when num <= limit do
+  defp is_at_most([num | _tl], limit, _msg) when num <= limit do
     Result.ok(num)
   end
 
-  defp at_most(_num, _limit, msg) do
+  defp is_at_most(_num, _limit, msg) do
     Result.error(msg)
   end
 
-  defp greater_than([num | _tl], limit, _msg) when limit < num do
+  defp is_greater_than([num | _tl], limit, _msg) when limit < num do
     Result.ok(num)
   end
 
-  defp greater_than(_num, _limit, msg) do
+  defp is_greater_than(_num, _limit, msg) do
     Result.error(msg)
   end
 
-  defp at_least([num | _tl], limit, _msg) when limit <= num do
+  defp is_at_least([num | _tl], limit, _msg) when limit <= num do
     Result.ok(num)
   end
 
-  defp at_least(_num, _limit, msg) do
+  defp is_at_least(_num, _limit, msg) do
     Result.error(msg)
   end
 
-  defp in_range([num | _tl], [min, max], _msg) when min <= num and num <= max do
+  defp is_in_range([num | _tl], [min, max], _msg) when min <= num and num <= max do
     Result.ok(num)
   end
 
-  defp in_range(_num, _min_max, msg) do
+  defp is_in_range(_num, _min_max, msg) do
     Result.error(msg)
   end
 
-  defp equal_to([num | _tl], limit, _msg) when num == limit do
+  defp is_equal_to([num | _tl], limit, _msg) when num == limit do
     Result.ok(num)
   end
 
-  defp equal_to(_num, _limit, msg) do
+  defp is_equal_to(_num, _limit, msg) do
     Result.error(msg)
   end
 end

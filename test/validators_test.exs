@@ -3,7 +3,6 @@ defmodule ValidatorsTest do
   use ExUnit.Case, async: true
   use PropCheck
 
-  doctest Validatex.Validators
   alias Validatex.Validators
 
   @error_msg "ERROR"
@@ -12,68 +11,68 @@ defmodule ValidatorsTest do
 
   property "should verify if input value is not empty" do
     forall value <- binary() do
-      value |> Validators.is_not_empty?(@error_msg) |> check_result(value, @error_msg)
+      value |> Validators.not_empty(@error_msg) |> check_result(value, @error_msg)
     end
   end
 
   property "should verify if input value is an integer" do
     forall value <- generate_data() do
-      check_fn(&Validators.is_integer?/2, value)
+      check_fn(&Validators.integer/2, value)
     end
   end
 
   property "should verify if input value is a float" do
     forall value <- generate_data() do
-      check_fn(&Validators.is_float?/2, value)
+      check_fn(&Validators.float/2, value)
     end
   end
 
   property "should verify if input value is less than required value" do
     forall {value, limit} <- {generate_data(), number()} do
-      check_fn(&Validators.is_less_than?/3, value, limit)
+      check_fn(&Validators.less_than/3, value, limit)
     end
   end
 
   property "should verify if input value is less or equal to required value" do
     forall {value, limit} <- {generate_data(), number()} do
-      check_fn(&Validators.is_at_most?/3, value, limit)
+      check_fn(&Validators.at_most/3, value, limit)
     end
   end
 
   property "should verify if input value is greater than required value" do
     forall {value, limit} <- {generate_data(), number()} do
-      check_fn(&Validators.is_greater_than?/3, value, limit)
+      check_fn(&Validators.greater_than/3, value, limit)
     end
   end
 
   property "should verify if input value is greater or equal to required value" do
     forall {value, limit} <- {generate_data(), number()} do
-      check_fn(&Validators.is_at_least?/3, value, limit)
+      check_fn(&Validators.at_least/3, value, limit)
     end
   end
 
   property "should verify if input value is is between two numbers" do
     forall {value, n1, n2} <- {generate_data(), number(), number()} do
-      check_fn(&Validators.is_in_range?/4, value, [min(n1, n2), max(n1, n2)])
+      check_fn(&Validators.in_range/4, value, [min(n1, n2), max(n1, n2)])
     end
   end
 
   property "should verify if input value is equal to required value" do
     forall {value, limit} <- {generate_data(), number()} do
-      check_fn(&Validators.is_equal_to?/3, value, Enum.random([value, limit]))
+      check_fn(&Validators.equal_to/3, value, Enum.random([value, limit]))
     end
   end
 
   property "should verify if input value is true or false" do
     forall value <- boolean() do
-      value |> Validators.is_true?(@error_msg) |> check_result(value, @error_msg)
+      value |> Validators.true?(@error_msg) |> check_result(value, @error_msg)
     end
   end
 
   property "should verify if input value is inside required list" do
     forall {value, lst} <- {number(), list(number())} do
       value
-      |> Validators.is_in_list?(lst, @error_msg)
+      |> Validators.in_list(lst, @error_msg)
       |> check_result(value, @error_msg)
     end
   end
