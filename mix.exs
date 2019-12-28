@@ -6,7 +6,7 @@ defmodule Validatex.MixProject do
   def project do
     [
       app: :validatex,
-      dialyzer: dialyzer_base() |> dialyzer_ptl(System.get_env("SEMAPHORE_CACHE_DIR")),
+      dialyzer: dialyzer_base(),
       version: @version,
       elixir: "~> 1.9",
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -83,41 +83,6 @@ defmodule Validatex.MixProject do
         :no_opaque
       ]
     ]
-  end
-
-  defp dialyzer_ptl(base, nil) do
-    base
-  end
-
-  defp dialyzer_ptl(base, path) do
-    base ++
-      [
-        plt_core_path: path,
-        plt_file:
-          Path.join(
-            path,
-            "dialyxir_erlang-#{otp_vsn()}_elixir-#{System.version()}_deps-dev.plt"
-          )
-      ]
-  end
-
-  defp otp_vsn() do
-    major = :erlang.system_info(:otp_release) |> List.to_string()
-    vsn_file = Path.join([:code.root_dir(), "releases", major, "OTP_VERSION"])
-
-    try do
-      {:ok, contents} = File.read(vsn_file)
-      String.split(contents, "\n", trim: true)
-    else
-      [full] ->
-        full
-
-      _ ->
-        major
-    catch
-      :error, _ ->
-        major
-    end
   end
 
   defp docs() do
