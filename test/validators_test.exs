@@ -17,49 +17,52 @@ defmodule ValidatorsTest do
 
   property "should verify if input value is an integer" do
     forall value <- generate_data() do
-      check_fn(&Validators.integer/2, value)
+      check_fn_with_value(&Validators.integer/2, value)
     end
   end
 
   property "should verify if input value is a float" do
     forall value <- generate_data() do
-      check_fn(&Validators.float/2, value)
+      check_fn_with_value(&Validators.float/2, value)
     end
   end
 
   property "should verify if input value is less than required value" do
     forall {value, limit} <- {generate_data(), number()} do
-      check_fn(&Validators.less_than/3, value, limit)
+      check_fn_with_value_and_limit(&Validators.less_than/3, value, limit)
     end
   end
 
   property "should verify if input value is less or equal to required value" do
     forall {value, limit} <- {generate_data(), number()} do
-      check_fn(&Validators.at_most/3, value, limit)
+      check_fn_with_value_and_limit(&Validators.at_most/3, value, limit)
     end
   end
 
   property "should verify if input value is greater than required value" do
     forall {value, limit} <- {generate_data(), number()} do
-      check_fn(&Validators.greater_than/3, value, limit)
+      check_fn_with_value_and_limit(&Validators.greater_than/3, value, limit)
     end
   end
 
   property "should verify if input value is greater or equal to required value" do
     forall {value, limit} <- {generate_data(), number()} do
-      check_fn(&Validators.at_least/3, value, limit)
+      check_fn_with_value_and_limit(&Validators.at_least/3, value, limit)
     end
   end
 
   property "should verify if input value is is between two numbers" do
     forall {value, n1, n2} <- {generate_data(), number(), number()} do
-      check_fn(&Validators.in_range/4, value, [min(n1, n2), max(n1, n2)])
+      value
+      |> Kernel.to_string()
+      |> Validators.in_range(min(n1, n2), max(n1, n2), @error_msg)
+      |> check_result(value, @error_msg)
     end
   end
 
   property "should verify if input value is equal to required value" do
     forall {value, limit} <- {generate_data(), number()} do
-      check_fn(&Validators.equal_to/3, value, Enum.random([value, limit]))
+      check_fn_with_value_and_limit(&Validators.equal_to/3, value, Enum.random([value, limit]))
     end
   end
 
@@ -89,35 +92,28 @@ defmodule ValidatorsTest do
   # Generator
 
   def generate_data() do
-    binary =
-      let str <- binary() do
-        str <> "x"
-      end
+    only_string =
+      such_that(
+        v <- binary(),
+        when: not Regex.match?(~r/^[+-]?([0-9]*[.])?[0-9]+$/, v)
+      )
 
     oneof([
       number(),
-      binary,
-      ""
+      only_string
     ])
   end
 
   # Private
 
-  defp check_fn(fun, value) do
+  defp check_fn_with_value(fun, value) do
     value
     |> Kernel.to_string()
     |> fun.(@error_msg)
     |> check_result(value, @error_msg)
   end
 
-  defp check_fn(fun, value, [min, max]) do
-    value
-    |> Kernel.to_string()
-    |> fun.(min, max, @error_msg)
-    |> check_result(value, @error_msg)
-  end
-
-  defp check_fn(fun, value, limit) do
+  defp check_fn_with_value_and_limit(fun, value, limit) do
     value
     |> Kernel.to_string()
     |> fun.(limit, @error_msg)
