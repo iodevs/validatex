@@ -66,7 +66,10 @@ defmodule Validatex.Validators do
   @spec integer(raw(), error_msg()) :: Result.t(error_msg(), integer())
   def integer(value, msg \\ "The value has to be an integer!")
       when raw?(value) and error_msg?(msg) do
-    value |> not_empty() |> Result.map(&Integer.parse/1) |> case_do(msg)
+    value
+    |> not_empty()
+    |> Result.map(&Integer.parse/1)
+    |> Result.and_then(&to_result(&1, msg))
   end
 
   @doc """
@@ -81,7 +84,7 @@ defmodule Validatex.Validators do
   @spec float(raw(), error_msg()) :: Result.t(error_msg(), float())
   def float(value, msg \\ "The value has to be a float!")
       when raw?(value) and error_msg?(msg) do
-    value |> not_empty() |> Result.map(&Float.parse/1) |> case_do(msg)
+    value |> not_empty() |> Result.map(&Float.parse/1) |> Result.and_then(&to_result(&1, msg))
   end
 
   @doc """
@@ -255,21 +258,14 @@ defmodule Validatex.Validators do
     |> Result.resolve()
   end
 
-  defp case_do(tpl, msg) do
-    case tpl do
-      {:ok, {val, ""}} ->
-        Result.ok(val)
-
-      _ ->
-        Result.error(msg)
-    end
-  end
-
   defp not_integer_either_float({:error, errs_list}) when length(errs_list) == 2 do
     Result.error("The value has to be integer or float!")
   end
 
   defp not_integer_either_float(is_ok), do: is_ok
+
+  defp to_result({val, ""}, _msg), do: Result.ok(val)
+  defp to_result(_, msg), do: Result.error(msg)
 
   defp is_less_than([num | _tl], limit, _msg) when num < limit do
     Result.ok(num)
