@@ -192,14 +192,14 @@ defmodule Validatex.Validators do
       when raw?(value) and is_integer(min) and is_integer(max) and error_msg?(msg) do
     value
     |> integer()
-    |> is_in_range(min, max, msg)
+    |> Result.and_then(&is_in_range(&1, min, max, msg))
   end
 
   def in_range(value, min, max, msg)
       when raw?(value) and is_float(min) and is_float(max) and error_msg?(msg) do
     value
     |> float()
-    |> is_in_range(min, max, msg)
+    |> Result.and_then(&is_in_range(&1, min, max, msg))
   end
 
   @doc """
