@@ -52,7 +52,8 @@ defmodule ValidatorsTest do
   end
 
   property "should verify if input value is is between two numbers" do
-    forall {value, n1, n2} <- {generate_data(), number(), number()} do
+    forall {value, {n1, n2}} <-
+             {generate_data(), oneof([{integer(), integer()}, {float(), float()}])} do
       value
       |> Kernel.to_string()
       |> Validators.in_range(min(n1, n2), max(n1, n2), @error_msg)
