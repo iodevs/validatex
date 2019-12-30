@@ -98,8 +98,15 @@ defmodule Validatex.Validators do
   """
   @spec less_than(raw(), number(), error_msg()) :: Result.t(error_msg(), number())
   def less_than(value, req_val, msg \\ "The value has to be less than required value!")
-      when raw?(value) and is_number(req_val) and error_msg?(msg) do
-    validate(value, req_val, msg, &is_less_than/3)
+
+  def less_than(value, req_val, msg)
+      when raw?(value) and is_integer(req_val) and error_msg?(msg) do
+    validate(value, req_val, msg, &integer/1, &is_less_than/3)
+  end
+
+  def less_than(value, req_val, msg)
+      when raw?(value) and is_float(req_val) and error_msg?(msg) do
+    validate(value, req_val, msg, &float/1, &is_less_than/3)
   end
 
   @doc """
@@ -113,8 +120,15 @@ defmodule Validatex.Validators do
   """
   @spec at_most(raw(), number(), error_msg()) :: Result.t(error_msg(), number())
   def at_most(value, req_val, msg \\ "The value has to be less or equal to required value!")
-      when raw?(value) and is_number(req_val) and error_msg?(msg) do
-    validate(value, req_val, msg, &is_at_most/3)
+
+  def at_most(value, req_val, msg)
+      when raw?(value) and is_integer(req_val) and error_msg?(msg) do
+    validate(value, req_val, msg, &integer/1, &is_at_most/3)
+  end
+
+  def at_most(value, req_val, msg)
+      when raw?(value) and is_float(req_val) and error_msg?(msg) do
+    validate(value, req_val, msg, &float/1, &is_at_most/3)
   end
 
   @doc """
@@ -122,21 +136,31 @@ defmodule Validatex.Validators do
   """
   @spec greater_than(raw(), number(), error_msg()) :: Result.t(error_msg(), number())
   def greater_than(value, req_val, msg \\ "The value has to be greater than required value!")
-      when raw?(value) and is_number(req_val) and error_msg?(msg) do
-    validate(value, req_val, msg, &is_greater_than/3)
+
+  def greater_than(value, req_val, msg)
+      when raw?(value) and is_integer(req_val) and error_msg?(msg) do
+    validate(value, req_val, msg, &integer/1, &is_greater_than/3)
+  end
+
+  def greater_than(value, req_val, msg)
+      when raw?(value) and is_float(req_val) and error_msg?(msg) do
+    validate(value, req_val, msg, &float/1, &is_greater_than/3)
   end
 
   @doc """
   Validates if the input value is greater or equal to required value.
   """
   @spec at_least(raw(), number(), error_msg()) :: Result.t(error_msg(), number())
-  def at_least(
-        value,
-        req_val,
-        msg \\ "The value has to be greater or equal to required value!"
-      )
-      when raw?(value) and is_number(req_val) and error_msg?(msg) do
-    validate(value, req_val, msg, &is_at_least/3)
+  def at_least(value, req_val, msg \\ "The value has to be greater or equal to required value!")
+
+  def at_least(value, req_val, msg)
+      when raw?(value) and is_integer(req_val) and error_msg?(msg) do
+    validate(value, req_val, msg, &integer/1, &is_at_least/3)
+  end
+
+  def at_least(value, req_val, msg)
+      when raw?(value) and is_float(req_val) and error_msg?(msg) do
+    validate(value, req_val, msg, &float/1, &is_at_least/3)
   end
 
   @doc """
@@ -165,8 +189,17 @@ defmodule Validatex.Validators do
   @spec in_range(raw(), number(), number(), error_msg()) ::
           Result.t(error_msg(), number())
   def in_range(value, min, max, msg)
-      when raw?(value) and is_number(min) and is_number(max) and is_binary(msg) do
-    validate(value, [min, max], msg, &is_in_range/3)
+      when raw?(value) and is_integer(min) and is_integer(max) and error_msg?(msg) do
+    value
+    |> integer()
+    |> is_in_range(min, max, msg)
+  end
+
+  def in_range(value, min, max, msg)
+      when raw?(value) and is_float(min) and is_float(max) and error_msg?(msg) do
+    value
+    |> float()
+    |> is_in_range(min, max, msg)
   end
 
   @doc """
@@ -183,17 +216,18 @@ defmodule Validatex.Validators do
   def equal_to(value, req_val, msg \\ "The value has to be equal to required value!")
 
   def equal_to(value, req_val, msg)
-      when raw?(value) and is_number(req_val) and error_msg?(msg) do
-    validate(value, req_val, msg, &is_equal_to/3)
+      when raw?(value) and is_integer(req_val) and error_msg?(msg) do
+    validate(value, req_val, msg, &integer/1, &is_equal_to/3)
+  end
+
+  def equal_to(value, req_val, msg)
+      when raw?(value) and is_float(req_val) and error_msg?(msg) do
+    validate(value, req_val, msg, &float/1, &is_equal_to/3)
   end
 
   def equal_to(value, req_val, msg)
       when raw?(value) and is_binary(req_val) and error_msg?(msg) do
-    if value == req_val do
-      Result.ok(value)
-    else
-      Result.error(msg)
-    end
+    validate(value, req_val, msg, &not_empty/1, &is_equal_to/3)
   end
 
   @doc """
@@ -249,25 +283,16 @@ defmodule Validatex.Validators do
 
   # Private
 
-  defp validate(value, req_val, msg, fun) when is_function(fun, 3) do
+  defp validate(value, req_val, msg, cast, fun) when is_function(fun, 3) do
     value
-    |> integer()
-    |> Result.r_or(float(value))
-    |> not_integer_either_float()
-    |> Result.map(&fun.(&1, req_val, msg))
-    |> Result.resolve()
+    |> cast.()
+    |> Result.and_then(&fun.(&1, req_val, msg))
   end
-
-  defp not_integer_either_float({:error, errs_list}) when length(errs_list) == 2 do
-    Result.error("The value has to be integer or float!")
-  end
-
-  defp not_integer_either_float(is_ok), do: is_ok
 
   defp to_result({val, ""}, _msg), do: Result.ok(val)
   defp to_result(_, msg), do: Result.error(msg)
 
-  defp is_less_than([num | _tl], limit, _msg) when num < limit do
+  defp is_less_than(num, limit, _msg) when num < limit do
     Result.ok(num)
   end
 
@@ -275,7 +300,7 @@ defmodule Validatex.Validators do
     Result.error(msg)
   end
 
-  defp is_at_most([num | _tl], limit, _msg) when num <= limit do
+  defp is_at_most(num, limit, _msg) when num <= limit do
     Result.ok(num)
   end
 
@@ -283,7 +308,7 @@ defmodule Validatex.Validators do
     Result.error(msg)
   end
 
-  defp is_greater_than([num | _tl], limit, _msg) when limit < num do
+  defp is_greater_than(num, limit, _msg) when limit < num do
     Result.ok(num)
   end
 
@@ -291,7 +316,7 @@ defmodule Validatex.Validators do
     Result.error(msg)
   end
 
-  defp is_at_least([num | _tl], limit, _msg) when limit <= num do
+  defp is_at_least(num, limit, _msg) when limit <= num do
     Result.ok(num)
   end
 
@@ -299,15 +324,15 @@ defmodule Validatex.Validators do
     Result.error(msg)
   end
 
-  defp is_in_range([num | _tl], [min, max], _msg) when min <= num and num <= max do
+  defp is_in_range(num, min, max, _msg) when min <= num and num <= max do
     Result.ok(num)
   end
 
-  defp is_in_range(_num, _min_max, msg) do
+  defp is_in_range(_num, _min, _max, msg) do
     Result.error(msg)
   end
 
-  defp is_equal_to([num | _tl], limit, _msg) when num == limit do
+  defp is_equal_to(num, limit, _msg) when num == limit do
     Result.ok(num)
   end
 
