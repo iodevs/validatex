@@ -126,8 +126,12 @@ defmodule ValidatorsTest do
         val == expected
 
       {:error, msg} ->
-        msg == expected_msg or msg == "The value has to be integer or float!" or
-          msg == "The value must not be an empty!"
+        msg in [
+          expected_msg,
+          "The value has to be an integer!",
+          "The value has to be a float!",
+          "The value must not be an empty!"
+        ]
     end
   end
 end
