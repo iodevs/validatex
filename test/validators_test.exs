@@ -63,7 +63,7 @@ defmodule ValidatorsTest do
 
   property "should verify if input value is equal to required value" do
     forall {value, limit} <- {generate_data(), number()} do
-      check_fn_with_value_and_limit(&Validators.equal_to/3, value, Enum.random([value, limit]))
+      check_fn_with_value_and_limit(&Validators.equal?/3, value, Enum.random([value, limit]))
     end
   end
 
