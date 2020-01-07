@@ -1,7 +1,12 @@
 defmodule Validatex.Validation do
   @moduledoc """
   This module helps with validation of input forms.
+
+  A table representing one field state and events (FSM):
+
   """
+
+  alias Validatex.MapExtra
 
   @type key() :: String.t() | atom()
 
@@ -49,6 +54,8 @@ defmodule Validatex.Validation do
   * `on_submit()` validates all model data (it means all fields) before submitting to server,
   """
   @type event(raw) :: on_submit() | on_blur() | on_related_change() | on_change(raw)
+
+  @type model() :: %{required(key()) => field(any(), any())}
 
   @doc """
   Guard for verifying if key of map is atom or binary.
@@ -183,21 +190,34 @@ defmodule Validatex.Validation do
   @doc """
   Runs validation for `field` with `on_related_change` event action.
   """
-  def validate_on_related_change(map, field, validator) when is_map(map) and key?(field) do
+  def validate_on_related_change(map, field, related_field, validator)
+      when is_map(map) and key?(field) and key?(related_field) and validator?(validator) do
+    related = MapExtra.get!(map, related_field)
+
     Map.update!(
       map,
       field,
-      &validate(&1, validator, :on_related_change)
+      &validate(&1, validator.(related), :on_related_change)
     )
   end
 
   @doc """
   Runs validation for `field` with `on_submit` event action.
   """
-  def validate_on_submit(map, validator_fun_for) when is_map(map) do
-    Enum.reduce(map, %{}, fn {field, value}, acc ->
-      Map.put(acc, field, validate(value, validator_fun_for.(field), :on_submit))
-    end)
+  @spec validate_on_submit(model(), key(), validator(any(), any())) :: model()
+  def validate_on_submit(map, field, validator)
+      when is_map(map) and key?(field) and validator?(validator) do
+    Map.update!(
+      map,
+      field,
+      &validate(&1, validator, :on_submit)
+    )
+  end
+
+  @spec validate_on_related_submit(model(), key(), key(), validator(any(), any())) :: model()
+  def validate_on_related_submit(map, field, related_field, validator)
+      when is_map(map) and key?(field) and key?(related_field) and validator?(validator) do
+    validate_on_submit(map, field, validator.(MapExtra.get!(map, related_field)))
   end
 
   @doc """
@@ -218,27 +238,27 @@ defmodule Validatex.Validation do
     |> Result.and_then(f)
   end
 
-  # Private
-
   @spec validate(field(raw, a), validator(raw, a), event(raw)) :: field(raw, a)
         when raw: var, a: var
-  defp validate({:field, _, _} = field, validator, :on_submit) when validator?(validator) do
+  def validate({:field, _, _} = field, validator, :on_submit) when validator?(validator) do
     validate_always(field, validator)
   end
 
-  defp validate({:field, _, _} = field, validator, :on_blur) when validator?(validator) do
+  def validate({:field, _, _} = field, validator, :on_blur) when validator?(validator) do
     validate_always(field, validator)
   end
 
-  defp validate({:field, _, _} = field, validator, :on_related_change)
-       when validator?(validator) do
+  def validate({:field, _, _} = field, validator, :on_related_change)
+      when validator?(validator) do
     validate_if_validated(field, validator)
   end
 
-  defp validate({:field, _, validity}, validator, {:on_change, val})
-       when validator?(validator) do
+  def validate({:field, _, validity}, validator, {:on_change, val})
+      when validator?(validator) do
     validate_if_validated({:field, val, validity}, validator)
   end
+
+  # Private
 
   @spec validate_always(field(raw, a), validator(raw, a)) :: field(raw, a) when a: var, raw: var
   defp validate_always({:field, raw, _}, validator) when validator?(validator) do

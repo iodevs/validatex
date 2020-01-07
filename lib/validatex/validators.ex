@@ -19,6 +19,8 @@ defmodule Validatex.Validators do
   according to your needs.
   """
 
+  alias Validatex.Validation
+
   @type raw() :: String.t()
   @type error_msg() :: String.t()
 
@@ -208,27 +210,51 @@ defmodule Validatex.Validators do
   ## Example:
       @spec captcha(String.t()) :: Result.t(String.t(), number())
       def captcha(value) do
-        Validators.equal_to(value, 10, "The summation has to be equal to 10!")
+        Validators.equal?(value, 10, "The summation has to be equal to 10!")
       end
   """
-  @spec equal_to(raw(), number() | String.t(), error_msg()) ::
+  @spec equal?(raw(), number() | String.t(), error_msg()) ::
           Result.t(error_msg(), number() | String.t())
-  def equal_to(value, req_val, msg \\ "The value has to be equal to required value!")
+  def equal?(value, req_val, msg \\ "The value has to be equal to required value!")
 
-  def equal_to(value, req_val, msg)
+  def equal?(value, req_val, msg)
       when raw?(value) and is_integer(req_val) and error_msg?(msg) do
     validate(value, req_val, msg, &integer/1, &is_equal_to/3)
   end
 
-  def equal_to(value, req_val, msg)
+  def equal?(value, req_val, msg)
       when raw?(value) and is_float(req_val) and error_msg?(msg) do
     validate(value, req_val, msg, &float/1, &is_equal_to/3)
   end
 
-  def equal_to(value, req_val, msg)
+  def equal?(value, req_val, msg)
       when raw?(value) and is_binary(req_val) and error_msg?(msg) do
     validate(value, req_val, msg, &not_empty/1, &is_equal_to/3)
   end
+
+  @doc """
+  Returns an `Err errorMessage` if the given value of `Field Valid a` isn't same as
+  validation argument, otherwise return `Ok validation argument` for others `Validity`
+  or for `Valid a` is `Ok value`.
+    import Validation exposing (Validator, ErrorMessage, Field)
+    pass : Field String String
+    pass =
+        Field "" (Valid "password*")
+    confirmPasswordValidation : Validator String String
+    confirmPasswordValidation =
+        isEqualTo pass "The passwords don't match."
+    confirmPasswordValidation "password*" -- Ok "password*"
+    confirmPasswordValidation "pasword*"  -- Err "The passwords don't match."
+  """
+  @spec equal_to?(a, Validation.field(any(), a), error_msg()) :: Result.t(error_msg, a)
+        when a: var
+  def equal_to?(value, field, msg \\ "Fields do not match.")
+
+  def equal_to?(value, {:field, _raw, {:valid, a}}, _msg) when value == a do
+    Result.ok(a)
+  end
+
+  def equal_to?(_value, _field, msg), do: Result.error(msg)
 
   @doc """
   Validates if the input value is true or false.
