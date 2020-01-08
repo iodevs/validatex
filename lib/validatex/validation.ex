@@ -168,6 +168,7 @@ defmodule Validatex.Validation do
   @doc """
   Runs validation for `field` with `on_blur` event action.
   """
+  @spec validate_on_blur(model(), key(), validator(any(), any())) :: model()
   def validate_on_blur(map, field, validator) when is_map(map) and key?(field) do
     Map.update!(
       map,
@@ -179,6 +180,7 @@ defmodule Validatex.Validation do
   @doc """
   Runs validation for `field` with `on_change` event action.
   """
+  @spec validate_on_change(model(), key(), any(), validator(any(), any())) :: model()
   def validate_on_change(map, field, value, validator) when is_map(map) and key?(field) do
     Map.update!(
       map,
@@ -190,6 +192,7 @@ defmodule Validatex.Validation do
   @doc """
   Runs validation for `field` with `on_related_change` event action.
   """
+  @spec validate_on_related_change(model(), key(), key(), validator(any(), any())) :: model()
   def validate_on_related_change(map, field, related_field, validator)
       when is_map(map) and key?(field) and key?(related_field) and validator?(validator) do
     related = MapExtra.get!(map, related_field)
