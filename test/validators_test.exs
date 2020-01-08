@@ -3,7 +3,7 @@ defmodule ValidatorsTest do
   use ExUnit.Case, async: true
   use PropCheck
 
-  alias Validatex.Validators
+  alias Validatex.{Validators, Validation}
 
   @error_msg "ERROR"
 
@@ -67,6 +67,14 @@ defmodule ValidatorsTest do
     end
   end
 
+  property "should verify if input value is equal to related field" do
+    forall {value, field} <- field() do
+      value
+      |> Validators.equal_to?(field, @error_msg)
+      |> check_result(value, @error_msg)
+    end
+  end
+
   property "should verify if input value is true or false" do
     forall value <- boolean() do
       value |> Validators.true?(@error_msg) |> check_result(value, @error_msg)
@@ -90,7 +98,20 @@ defmodule ValidatorsTest do
     end
   end
 
-  # Generator
+  # Generators
+
+  def field() do
+    let {value, other} <- {generate_data(), generate_data()} do
+      let field <-
+            oneof([
+              value |> to_string() |> Validation.field(),
+              Validation.pre_validated_field(value, &to_string/1),
+              value |> to_string() |> Validation.field() |> Validation.invalidate("Bad field.")
+            ]) do
+        {Enum.random([value, other]), field}
+      end
+    end
+  end
 
   def generate_data() do
     only_string =
