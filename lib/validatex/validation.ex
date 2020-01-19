@@ -1,9 +1,6 @@
 defmodule Validatex.Validation do
   @moduledoc """
   This module helps with validation of input forms.
-
-  A table representing one field state and events (FSM):
-
   """
 
   alias Validatex.MapExtra
@@ -29,8 +26,8 @@ defmodule Validatex.Validation do
   @type validity(a) :: not_validated() | valid(a) | invalid()
 
   @typedoc """
-  Defines `field` data type. It contains a value from input form (it's called `raw` value)
-  and information about validation of this value.
+  Defines `field` data type. It contains a (`raw`) value from input form
+  and an information about validation of this value.
   """
   @type field(raw, a) :: {:field, raw, validity(a)}
 
@@ -47,11 +44,11 @@ defmodule Validatex.Validation do
   @typedoc """
   Event describes four different action for `field`s:
 
-  * `on_blur()` validates `field` when user leaves an input form.
-  * `on_change(raw)` validates `field` when user changes value in input field.
-  * `on_related_change()` validates `field` which is tied with another `field`.
-    For example: password and his confirm form.
-  * `on_submit()` validates all model data (it means all fields) before submitting to server,
+  * `on_blur()` validates `field` when user leaves an input form
+  * `on_change(raw)` validates `field` when user changes value in input field
+  * `on_related_change()` validates `field` which is tied with another `field`,
+    for example: password and his confirm form
+  * `on_submit()` validates all model data (it means all fields) before submitting to server
   """
   @type event(raw) :: on_submit() | on_blur() | on_related_change() | on_change(raw)
 
@@ -69,6 +66,10 @@ defmodule Validatex.Validation do
 
   @doc """
   Gets `raw` value from `field`.
+
+      iex> {:field, "bar", :not_validated} |> Validatex.Validation.raw_value()
+      "bar"
+
   """
   @spec raw_value(field(raw, any())) :: raw when raw: var
   def raw_value({:field, raw, _}) do
@@ -77,6 +78,10 @@ defmodule Validatex.Validation do
 
   @doc """
   Gets `validity` from `field`.
+
+      iex> {:field, "bar", :not_validated} |> Validatex.Validation.validity()
+      :not_validated
+
   """
   @spec validity(field(any(), a)) :: validity(a) when a: var
   def validity({:field, _, validity}) do
@@ -84,8 +89,14 @@ defmodule Validatex.Validation do
   end
 
   @doc """
-  `field` with `:not_validated` validity. It's used as init value of your forms,
+  Defines `field` with `:not_validated` validity. It's used as init value of your forms,
   e.g. for name, password,...
+  See [example](https://github.com/iodevs/validatex_example/blob/fca10866ee93836b396f0f6adf67e335b2e24276/lib/server_web/live/user/register_live.ex#L157)
+  of using.
+
+      iex> Validatex.Validation.field("foo")
+      {:field, "foo", :not_validated}
+
   """
   @spec field(raw) :: {:field, raw, :not_validated} when raw: var
   def field(raw) do
@@ -101,8 +112,11 @@ defmodule Validatex.Validation do
   end
 
   @doc """
-  If you need to have the `field` with `valid(a)` validity. For example
-  `score |> Validation.pre_validated_field(& &1)` where `score ` is `binary`.
+  If you need to have the `field` with `valid(a)` validity.
+
+      iex> "5" |> Validatex.Validation.pre_validated_field(& &1)
+      {:field, "5", {:valid, "5"}}
+
   """
   @spec pre_validated_field(val, (val -> String.t())) :: {:field, String.t(), valid(val)}
         when val: var
@@ -113,6 +127,10 @@ defmodule Validatex.Validation do
   @doc """
   If you need to have the `field` with `invalid()` validity. Then you have to add an error
   message.
+
+      iex> Validatex.Validation.field("bar") |> Validatex.Validation.invalidate("Expected foo!")
+      {:field, "bar", {:invalid, "Expected foo!"}}
+
   """
   @spec invalidate(field(raw, any()), String.t()) :: {:field, raw, {:invalid, error()}}
         when raw: var
@@ -121,7 +139,23 @@ defmodule Validatex.Validation do
   end
 
   @doc """
-  Applying function to concrete valid `field`s.
+  Applying function on concrete or all valid `field`s according to your needs.
+
+      iex> nv = Validatex.Validation.field("bar")
+      {:field, "bar", :not_validated}
+      iex> pv = Validatex.Validation.pre_validated_field("foo", & &1)
+      {:field, "foo", {:valid, "foo"}}
+      iex> data = %{"name" => nv, "surname" => pv}
+      %{
+        "name" => {:field, "bar", :not_validated},
+        "surname" => {:field, "foo", {:valid, "foo"}}
+      }
+      iex> Validatex.Validation.apply(data,["name", "surname"], & &1)
+      {:invalid, "'name' field isn't valid.'"}
+      iex> Validatex.Validation.apply(data,["surname"],
+      ...> fn %{"surname" => s} -> %{"surname" => String.capitalize(s)} end)
+      {:valid, %{"surname" => "Foo"}}
+
   """
   @spec apply(%{required(key()) => field(any(), a)}, [key()], (%{required(key()) => a} -> b)) ::
           validity(b)
@@ -134,6 +168,12 @@ defmodule Validatex.Validation do
 
   @doc """
   Gets error from `field`.
+
+      iex> Validatex.Validation.field("bar") |>
+      ...> Validatex.Validation.invalidate("Expected foo!") |>
+      ...> Validatex.Validation.extract_error()
+      "Expected foo!"
+
   """
   @spec extract_error(field(any(), any())) :: ExMaybe.t(error_or_errors())
   def extract_error({:field, _, {:invalid, error}}) do
@@ -146,6 +186,13 @@ defmodule Validatex.Validation do
 
   @doc """
   Validation of optional variable.
+
+      iex> f = Validatex.Validation.optional(&Validatex.Validators.not_empty(&1))
+      iex> f.("")
+      {:ok, nil}
+      iex> f.("foo")
+      {:ok, "foo"}
+
   """
   @spec optional(validator(String.t(), a)) :: validator(String.t(), ExMaybe.t(a)) when a: var
   def optional(validator) when validator?(validator) do
@@ -160,13 +207,22 @@ defmodule Validatex.Validation do
 
   @doc """
   Verification if `field` has valid value.
+
+      iex> "5" |> Validatex.Validation.pre_validated_field(& &1) |> Validatex.Validation.valid?()
+      true
+
+      iex> {:field, "bar", :not_validated} |> Validatex.Validation.valid?()
+      false
+
   """
   @spec valid?(field(any(), any())) :: boolean()
   def valid?({:field, _, {:valid, _}}), do: true
   def valid?(_), do: false
 
   @doc """
-  Runs validation for `field` with `on_blur` event action.
+  Runs validation on map which contains `field`s with given validator for `on_blur` event action.
+  See [example](https://github.com/iodevs/validatex_example/blob/fca10866ee93836b396f0f6adf67e335b2e24276/lib/server_web/live/user/register_live.ex#L110)
+  of using.
   """
   @spec validate_on_blur(model(), key(), validator(any(), any())) :: model()
   def validate_on_blur(map, field, validator) when is_map(map) and key?(field) do
@@ -178,7 +234,9 @@ defmodule Validatex.Validation do
   end
 
   @doc """
-  Runs validation for `field` with `on_change` event action.
+  Runs validation on map which contains `field`s with given validator for `on_change` event action.
+  See [example](https://github.com/iodevs/validatex_example/blob/fca10866ee93836b396f0f6adf67e335b2e24276/lib/server_web/live/user/register_live.ex#L92)
+  of using.
   """
   @spec validate_on_change(model(), key(), any(), validator(any(), any())) :: model()
   def validate_on_change(map, field, value, validator) when is_map(map) and key?(field) do
@@ -190,7 +248,9 @@ defmodule Validatex.Validation do
   end
 
   @doc """
-  Runs validation for `field` with `on_related_change` event action.
+  Runs validation on map which contains `field`s with given validator for `on_related_change` event action.
+  See [example](https://github.com/iodevs/validatex_example/blob/fca10866ee93836b396f0f6adf67e335b2e24276/lib/server_web/live/user/register_live.ex#L31)
+  of using.
   """
   @spec validate_on_related_change(model(), key(), key(), validator(any(), any())) :: model()
   def validate_on_related_change(map, field, related_field, validator)
@@ -205,7 +265,9 @@ defmodule Validatex.Validation do
   end
 
   @doc """
-  Runs validation for `field` with `on_submit` event action.
+  Runs validation on map which contains `field`s with given validator for `on_submit` event action.
+  See [example](https://github.com/iodevs/validatex_example/blob/fca10866ee93836b396f0f6adf67e335b2e24276/lib/server_web/live/user/register_live.ex#L123)
+  of using.
   """
   @spec validate_on_submit(model(), key(), validator(any(), any())) :: model()
   def validate_on_submit(map, field, validator)
@@ -217,6 +279,14 @@ defmodule Validatex.Validation do
     )
   end
 
+  @doc """
+  Runs validation for `field` which is tied with another `field` with `on_submit` event action.
+  For example `password` and `confirm_password`.
+
+  **Important note**: This function has to be placed immediately after calling `validate_on_submit` function.
+  See [example](https://github.com/iodevs/validatex_example/blob/fca10866ee93836b396f0f6adf67e335b2e24276/lib/server_web/live/user/register_live.ex#L123)
+  of using.
+  """
   @spec validate_on_related_submit(model(), key(), key(), validator(any(), any())) :: model()
   def validate_on_related_submit(map, field, related_field, validator)
       when is_map(map) and key?(field) and key?(related_field) and validator?(validator) do
@@ -224,7 +294,9 @@ defmodule Validatex.Validation do
   end
 
   @doc """
-  If all `field`s have valid values then you can use this function to send these data to server.
+  If all `field`s have a valid values then you can use this function to send these data to server.
+  See [example](https://github.com/iodevs/validatex_example/blob/fca10866ee93836b396f0f6adf67e335b2e24276/lib/server_web/live/user/register_live.ex#L123)
+  of using.
   """
   @spec submit_if_valid(
           %{required(key()) => field(any(), a)},
@@ -241,6 +313,19 @@ defmodule Validatex.Validation do
     |> Result.and_then(f)
   end
 
+  @doc """
+  Runs validation for `field` with given validator and event action.
+
+      iex> nv = Validatex.Validation.field("bar")
+      {:field, "bar", :not_validated}
+      iex> Validatex.Validation.validate(nv, &Validatex.Validators.not_empty(&1), :on_submit)
+      {:field, "bar", {:valid, "bar"}}
+      iex> Validatex.Validation.validate(nv,
+      ...> &Validatex.Validators.not_empty(&1),
+      ...> {:on_change, "foo"})
+      {:field, "foo", :not_validated}
+
+  """
   @spec validate(field(raw, a), validator(raw, a), event(raw)) :: field(raw, a)
         when raw: var, a: var
   def validate({:field, _, _} = field, validator, :on_submit) when validator?(validator) do
