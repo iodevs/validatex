@@ -3,7 +3,7 @@ defmodule ValidatorsTest do
   use ExUnit.Case, async: true
   use PropCheck
 
-  alias Validatex.{Validators, Validation}
+  alias Validatex.{Validation, Validators}
 
   @error_msg "ERROR"
 

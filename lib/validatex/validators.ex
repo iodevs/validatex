@@ -233,18 +233,14 @@ defmodule Validatex.Validators do
   end
 
   @doc """
-  Returns an `Err errorMessage` if the given value of `Field Valid a` isn't same as
-  validation argument, otherwise return `Ok validation argument` for others `Validity`
-  or for `Valid a` is `Ok value`.
-    import Validation exposing (Validator, ErrorMessage, Field)
-    pass : Field String String
-    pass =
-        Field "" (Valid "password*")
-    confirmPasswordValidation : Validator String String
-    confirmPasswordValidation =
-        isEqualTo pass "The passwords don't match."
-    confirmPasswordValidation "password*" -- Ok "password*"
-    confirmPasswordValidation "pasword*"  -- Err "The passwords don't match."
+  Validates if the input value is equal to another input value. For example `password` input form
+  and `confirm_password` form.
+
+  ## Example:
+      @spec conf_password(Validation.field(any(), a)) :: (a -> Result.t(String.t(), a)) when a: var
+      def conf_password(pass) do
+        &Validators.equal_to?(&1, pass, "The passwords don't match!")
+      end
   """
   @spec equal_to?(a, Validation.field(any(), a), error_msg()) :: Result.t(error_msg, a)
         when a: var
