@@ -150,9 +150,9 @@ defmodule Validatex.Validation do
         "name" => {:field, "bar", :not_validated},
         "surname" => {:field, "foo", {:valid, "foo"}}
       }
-      iex> Validatex.Validation.apply(data,["name", "surname"], & &1)
+      iex> Validatex.Validation.apply(data, ["name", "surname"], & &1)
       {:invalid, "'name' field isn't valid.'"}
-      iex> Validatex.Validation.apply(data,["surname"],
+      iex> Validatex.Validation.apply(data, ["surname"],
       ...> fn %{"surname" => s} -> %{"surname" => String.capitalize(s)} end)
       {:valid, %{"surname" => "Foo"}}
 

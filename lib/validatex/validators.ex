@@ -3,13 +3,13 @@ defmodule Validatex.Validators do
   This module provides a few functions for validating data.
 
   All functions return [Result](https://hexdocs.pm/result/api-reference.html).
-  It means, if an input value is correct, function returns a tuple `{:ok, val}`.
-  If not then `{:error, "msg"}`.
+  It means, if an input value is correct (i.e. the value satisfies to given validation),
+  function returns a tuple `{:ok, val}`. If not then `{:error, "msg"}`.
 
   Usage:
 
   Let say that you have a few input forms on your page, for instance: name,
-  surname, password etc. Now you want to validate that the filled data are correct
+  surname, password etc. Now you want to validate whether the filled data are correct
   for each field. So you create somewhere inside your project a module
   [Validators](https://github.com/iodevs/validatex_example/blob/master/lib/server/validators.ex)
   which will be containing any of functions like bellow.
