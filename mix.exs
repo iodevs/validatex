@@ -46,7 +46,7 @@ defmodule Validatex.MixProject do
       {:ex_maybe, "~> 1.1"},
       {:ex_doc, "~> 0.21", only: :dev},
       {:credo, "~> 1.1", only: [:dev, :test]},
-      {:excoveralls, "~> 0.11", only: :test},
+      {:excoveralls, "~> 0.12.2", only: :test},
       {:dialyxir, "~> 0.5", only: [:dev, :test], runtime: false},
       {:propcheck, "~> 1.2", only: :test}
     ]
@@ -99,6 +99,6 @@ defmodule Validatex.MixProject do
 
   defp copy_assets(_) do
     File.mkdir_p!("doc/docs")
-    # File.cp_r!("docs", "doc/docs")
+    File.cp_r!("docs", "doc/docs")
   end
 end

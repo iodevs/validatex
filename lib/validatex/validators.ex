@@ -10,7 +10,8 @@ defmodule Validatex.Validators do
 
   Let say that you have a few input forms on your page, for instance: name,
   surname, password etc. Now you want to validate that the filled data are correct
-  for each field. So you create somewhere inside your project a module `Validators`
+  for each field. So you create somewhere inside your project a module
+  [Validators](https://github.com/iodevs/validatex_example/blob/master/lib/server/validators.ex)
   which will be containing any of functions like bellow.
 
   Note:

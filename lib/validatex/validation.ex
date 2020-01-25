@@ -91,7 +91,7 @@ defmodule Validatex.Validation do
   @doc """
   Defines `field` with `:not_validated` validity. It's used as init value of your forms,
   e.g. for name, password,...
-  See [example](https://github.com/iodevs/validatex_example/blob/fca10866ee93836b396f0f6adf67e335b2e24276/lib/server_web/live/user/register_live.ex#L157)
+  See [example](https://github.com/iodevs/validatex_example/blob/master/lib/server_web/live/user/register_live.ex#L157)
   of using.
 
       iex> Validatex.Validation.field("foo")
@@ -221,7 +221,7 @@ defmodule Validatex.Validation do
 
   @doc """
   Runs validation on map which contains `field`s with given validator for `on_blur` event action.
-  See [example](https://github.com/iodevs/validatex_example/blob/fca10866ee93836b396f0f6adf67e335b2e24276/lib/server_web/live/user/register_live.ex#L110)
+  See [example](https://github.com/iodevs/validatex_example/blob/master/lib/server_web/live/user/register_live.ex#L110)
   of using.
   """
   @spec validate_on_blur(model(), key(), validator(any(), any())) :: model()
@@ -235,7 +235,7 @@ defmodule Validatex.Validation do
 
   @doc """
   Runs validation on map which contains `field`s with given validator for `on_change` event action.
-  See [example](https://github.com/iodevs/validatex_example/blob/fca10866ee93836b396f0f6adf67e335b2e24276/lib/server_web/live/user/register_live.ex#L92)
+  See [example](https://github.com/iodevs/validatex_example/blob/master/lib/server_web/live/user/register_live.ex#L92)
   of using.
   """
   @spec validate_on_change(model(), key(), any(), validator(any(), any())) :: model()
@@ -249,7 +249,7 @@ defmodule Validatex.Validation do
 
   @doc """
   Runs validation on map which contains `field`s with given validator for `on_related_change` event action.
-  See [example](https://github.com/iodevs/validatex_example/blob/fca10866ee93836b396f0f6adf67e335b2e24276/lib/server_web/live/user/register_live.ex#L31)
+  See [example](https://github.com/iodevs/validatex_example/blob/master/lib/server_web/live/user/register_live.ex#L31)
   of using.
   """
   @spec validate_on_related_change(model(), key(), key(), validator(any(), any())) :: model()
@@ -266,7 +266,7 @@ defmodule Validatex.Validation do
 
   @doc """
   Runs validation on map which contains `field`s with given validator for `on_submit` event action.
-  See [example](https://github.com/iodevs/validatex_example/blob/fca10866ee93836b396f0f6adf67e335b2e24276/lib/server_web/live/user/register_live.ex#L123)
+  See [example](https://github.com/iodevs/validatex_example/blob/master/lib/server_web/live/user/register_live.ex#L123)
   of using.
   """
   @spec validate_on_submit(model(), key(), validator(any(), any())) :: model()
@@ -284,7 +284,7 @@ defmodule Validatex.Validation do
   For example `password` and `confirm_password`.
 
   **Important note**: This function has to be placed immediately after calling `validate_on_submit` function.
-  See [example](https://github.com/iodevs/validatex_example/blob/fca10866ee93836b396f0f6adf67e335b2e24276/lib/server_web/live/user/register_live.ex#L123)
+  See [example](https://github.com/iodevs/validatex_example/blob/master/lib/server_web/live/user/register_live.ex#L123)
   of using.
   """
   @spec validate_on_related_submit(model(), key(), key(), validator(any(), any())) :: model()
@@ -295,7 +295,7 @@ defmodule Validatex.Validation do
 
   @doc """
   If all `field`s have a valid values then you can use this function to send these data to server.
-  See [example](https://github.com/iodevs/validatex_example/blob/fca10866ee93836b396f0f6adf67e335b2e24276/lib/server_web/live/user/register_live.ex#L123)
+  See [example](https://github.com/iodevs/validatex_example/blob/master/lib/server_web/live/user/register_live.ex#L123)
   of using.
   """
   @spec submit_if_valid(
