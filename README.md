@@ -13,7 +13,7 @@ Find inspiration in [validation example](https://github.com/iodevs/validatex_exa
 ```elixir
 def deps do
   [
-    {:validatex, "~> 0.3.0"}
+    {:validatex, "~> 1.0.0"}
   ]
 end
 ```

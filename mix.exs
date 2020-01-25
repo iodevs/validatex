@@ -1,7 +1,7 @@
 defmodule Validatex.MixProject do
   use Mix.Project
 
-  @version "0.3.0"
+  @version "@version: "1.0.0""
 
   def project do
     [
